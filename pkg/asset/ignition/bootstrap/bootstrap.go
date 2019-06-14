@@ -38,10 +38,11 @@ const (
 // bootstrapTemplateData is the data to use to replace values in bootstrap
 // template files.
 type bootstrapTemplateData struct {
-	EtcdCluster  string
-	PullSecret   string
-	ReleaseImage string
-	Proxy        *configv1.ProxyStatus
+	EtcdCluster   string
+	PullSecret    string
+	ReleaseImage  string
+	Proxy         *configv1.ProxyStatus
+	ClusterDomain string
 }
 
 // Bootstrap is an asset that generates the ignition config for bootstrap nodes.
@@ -166,12 +167,6 @@ func (a *Bootstrap) Files() []*asset.File {
 
 // getTemplateData returns the data to use to execute bootstrap templates.
 func (a *Bootstrap) getTemplateData(installConfig *types.InstallConfig, proxy *configv1.Proxy) (*bootstrapTemplateData, error) {
-	etcdEndpoints := make([]string, *installConfig.ControlPlane.Replicas)
-
-	for i := range etcdEndpoints {
-		etcdEndpoints[i] = fmt.Sprintf("https://etcd-%d.%s:2379", i, installConfig.ClusterDomain())
-	}
-
 	var releaseImage string
 	if ri, ok := os.LookupEnv("OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE"); ok && ri != "" {
 		logrus.Warn("Found override for ReleaseImage. Please be warned, this is not advised")
@@ -186,10 +181,11 @@ func (a *Bootstrap) getTemplateData(installConfig *types.InstallConfig, proxy *c
 	}
 
 	return &bootstrapTemplateData{
-		PullSecret:   installConfig.PullSecret,
-		ReleaseImage: releaseImage,
-		EtcdCluster:  strings.Join(etcdEndpoints, ","),
-		Proxy:        &proxy.Status,
+		PullSecret:    installConfig.PullSecret,
+		ReleaseImage:  releaseImage,
+		EtcdCluster:   fmt.Sprintf("https://bootstrap.%s:2379", installConfig.ClusterDomain()),
+		ClusterDomain: installConfig.ClusterDomain(),
+		Proxy:         &proxy.Status,
 	}, nil
 }
 
