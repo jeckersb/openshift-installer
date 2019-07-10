@@ -217,7 +217,7 @@ then
 fi
 
 
-if [ ! -d etcd-bootstrap.done ]
+if [ ! -f etcd-bootstrap.done ]
 then
        echo "Rendering etcd Operator Manifests..."
        rm -rf etcd-bootstrap

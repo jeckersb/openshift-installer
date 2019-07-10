@@ -44,7 +44,7 @@ resource "libvirt_network" "net" {
     local_only = true
 
     dynamic "srvs" {
-      for_each = concat(data.libvirt_network_dns_srv_template.etcd_masters.*.rendered, data.libvirt_network_dns_srv_template.etcd_bootstrap.*.rendered)
+      for_each = data.libvirt_network_dns_srv_template.etcd_bootstrap.*.rendered
       content {
         domain   = srvs.value.domain
         port     = srvs.value.port
